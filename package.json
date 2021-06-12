@@ -1,0 +1,29 @@
+{
+  "name": "beegram",
+  "version": "0.1.0",
+  "description": "MTProto API Client Framework",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmzan/beegram.git"
+  },
+  "keywords": [
+    "mtproto",
+    "api",
+    "client",
+    "framework"
+  ],
+  "author": "Ahmzan <ahmzan.dev@gmail.com>",
+  "license": "LGPL-3.0-only",
+  "bugs": {
+    "url": "https://github.com/ahmzan/beegram/issues"
+  },
+  "homepage": "https://github.com/ahmzan/beegram#readme",
+  "dependencies": {
+    "@types/node": "^15.12.2",
+    "typescript": "^4.3.2"
+  }
+}
