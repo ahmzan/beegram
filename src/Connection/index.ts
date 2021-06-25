@@ -1,6 +1,7 @@
+import { TransportError } from '../Errors/Transport';
 import { TCPAmbridge } from './Transport/TCP/TCPAmbridge';
 
-function getDcAddress(dcId: number, test?:number): string {
+function getDcAddress(dcId: number, test?: number): string {
   return '149.154.167.40';
 }
 
@@ -50,6 +51,10 @@ export class Connection {
   }
 
   async receive() {
-    return await this.transport.receive();
+    const payload = await this.transport.receive();
+    if (payload.length == 4) {
+      throw new TransportError(payload.readInt32LE().toString());
+    }
+    return payload;
   }
 }
