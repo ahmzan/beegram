@@ -1,5 +1,8 @@
 import { TransportError } from '../Errors/Transport';
 import { TCPAmbridge } from './Transport/TCP/TCPAmbridge';
+import debug from 'debug';
+
+const log = debug('Connection');
 
 function getDcAddress(dcId: number, test?: number): string {
   return '149.154.167.40';
@@ -20,9 +23,10 @@ export class Connection {
     this.address = getDcAddress(this.dcId);
     this.protocol = 'TCP';
     this.mode = 'TCPAmbridge';
+    this.transport = new TCPAmbridge(this.address);
 
     this.retries = 5;
-    console.log('Creating connection');
+    log('Creating connection')
   }
 
   async connect() {
@@ -30,11 +34,11 @@ export class Connection {
       this.transport = new TCPAmbridge(this.address);
 
       try {
-        console.log('Connecting to', this.address);
+        log('Connecting to %s', this.address);
         await this.transport.connect();
         break;
       } catch (err) {
-        console.log('Failed connect', err);
+        log('Failed to connect %o', err);
         this.transport.close();
         continue;
       }
@@ -42,16 +46,18 @@ export class Connection {
   }
 
   async close() {
-    console.log('Disconnecting from ', this.address);
+    log('Disconnecting from %s', this.address);
     await this.transport.close();
   }
 
   async send(payload: Buffer) {
+    log('Sending payload')
     await this.transport.send(payload);
   }
 
   async receive() {
     const payload = await this.transport.receive();
+    log('Receving payload')
     if (payload.length == 4) {
       throw new TransportError(payload.readInt32LE().toString());
     }
