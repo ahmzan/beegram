@@ -1,5 +1,5 @@
 import { TransportError } from '../Errors/Transport';
-import { TCPAmbridge } from './Transport/TCP/TCPAmbridge';
+import { TCPAmbridge, TCPIntermediate } from './Transport/TCP/';
 import debug from 'debug';
 
 const log = debug('Connection');
@@ -13,7 +13,7 @@ export class Connection {
   testMode: boolean;
   address: string;
   protocol: 'TCP' | 'WS' | 'HTTP';
-  transport: TCPAmbridge;
+  transport: TCPAmbridge | TCPIntermediate;
   retries: number;
   mode: 'TCPAmbridge' | 'TCPIntermediate' | 'TCPFull';
   constructor(dcId: number, testMode: boolean) {
@@ -23,15 +23,15 @@ export class Connection {
     this.address = getDcAddress(this.dcId);
     this.protocol = 'TCP';
     this.mode = 'TCPAmbridge';
-    this.transport = new TCPAmbridge(this.address);
+    this.transport = new TCPIntermediate(this.address);
 
     this.retries = 5;
-    log('Creating connection')
+    log('Creating connection');
   }
 
   async connect() {
     for (var i = 0; i < this.retries; i++) {
-      this.transport = new TCPAmbridge(this.address);
+      this.transport = new TCPIntermediate(this.address);
 
       try {
         log('Connecting to %s', this.address);
@@ -51,13 +51,13 @@ export class Connection {
   }
 
   async send(payload: Buffer) {
-    log('Sending payload')
+    log('Sending payload');
     await this.transport.send(payload);
   }
 
   async receive() {
     const payload = await this.transport.receive();
-    log('Receving payload')
+    log('Receving payload');
     if (payload.length == 4) {
       throw new TransportError(payload.readInt32LE().toString());
     }
