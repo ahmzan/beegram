@@ -2,7 +2,7 @@ import * as net from 'net';
 import { getBufferFromNumber, getNumberFromBuffer } from '../../../Utilities';
 import debug from 'debug';
 
-const log = debug('Connection:TCP');
+const log = debug('Connection:TCPAmbridge');
 
 export class TCPAmbridge {
   address: string;
@@ -82,10 +82,12 @@ export class TCPAmbridge {
   async receive(): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       this.socket.on('data', (data) => {
-        log('Receiving data from %s', this.address);
-        const decoded = this.decode(data);
+        if (data.length != 0) {
+          log('Receiving data from %s', this.address);
+          const decoded = this.decode(data);
 
-        resolve(decoded);
+          resolve(decoded);
+        }
       });
     });
   }
