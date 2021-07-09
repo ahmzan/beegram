@@ -1,9 +1,8 @@
-import BigNumber from 'bignumber.js';
-import { getBufferFromNumber, getNumberFromBuffer } from '../../Utilities';
+import { getBufferFromNumber, getNumberFromBuffer, Integer } from '../../Utilities';
 
 export class Int {
   static byteCount: number = 4;
-  static maxInt: number = 4294967295;
+  static maxInt: number = 2147483647;
 
   static read(buff: Buffer, offset: number = 0, little: boolean = true) {
     buff = buff.slice(offset, offset + this.byteCount);
@@ -15,7 +14,8 @@ export class Int {
 
   static write(int: number, little: boolean = true) {
     const buff = Buffer.alloc(4);
-    buff.writeInt32BE(int);
+    if (int > this.maxInt) buff.writeUInt32BE(int);
+    else buff.writeInt32BE(int);
 
     if (little) return buff.reverse();
 
@@ -33,24 +33,22 @@ export class Long {
   static read(buff: Buffer, offset: number = 0, little: boolean = true) {
     buff = buff.slice(offset, offset + this.byteCount);
 
-    if (little) buff = buff.reverse();
+    // if (little) buff = buff.reverse();
 
-    const bigNumber = new BigNumber(buff.toString('hex'), 16);
-
-    return bigNumber.toString(10);
+    // return BigInt(bigInt(buff.toString('hex'), 16).toString());
+    return Integer.fromBuff(buff, 8, little ? 'little' : 'big', true)
   }
 
-  static write(int: string, little: boolean = true) {
-    const bigNumber = new BigNumber(int, 10);
+  static write(int: bigint, little: boolean = true) {
+    if (int > this.maxInt) throw Error('integer is too big');
 
-    let buff = Buffer.from(
-      bigNumber.toString(16).padStart(this.byteCount * 2, '0'),
-      'hex'
-    );
+    // const binthex = int.toString(16).padStart(this.byteCount * 2, '0');
+    // const buff = Buffer.from(binthex, 'hex');
 
-    if (little) buff = buff.reverse();
+    // if (little) return buff.reverse();
 
-    return buff;
+    // return buff;
+    return Integer.toBuff(int, 8, little ? 'little':'big', true)
   }
 }
 
@@ -64,24 +62,23 @@ export class Int128 {
   static read(buff: Buffer, offset: number = 0, little: boolean = true) {
     buff = buff.slice(offset, offset + this.byteCount);
 
-    if (little) buff = buff.reverse();
+    // if (little) buff = buff.reverse();
 
-    const bigNumber = new BigNumber(buff.toString('hex'), 16);
+    // return BigInt(bigInt(buff.toString('hex'), 16).toString());
+    return Integer.fromBuff(buff, 16, little ? 'little' : 'big', true)
 
-    return bigNumber.toString(10);
   }
 
-  static write(int: string, little: boolean = true) {
-    const bigNumber = new BigNumber(int, 10);
+  static write(int: bigint, little: boolean = true) {
+    if (int > this.maxInt) throw Error('integer is too big');
 
-    let buff = Buffer.from(
-      bigNumber.toString(16).padStart(this.byteCount * 2, '0'),
-      'hex'
-    );
+    // const binthex = int.toString(16).padStart(this.byteCount * 2, '0');
+    // const buff = Buffer.from(binthex, 'hex');
 
-    if (little) buff = buff.reverse();
+    // if (little) return buff.reverse();
 
-    return buff;
+    // return buff;
+    return Integer.toBuff(int, 16, little ? 'little' : 'big' , true)
   }
 }
 
@@ -93,24 +90,22 @@ export class Int256 {
   static read(buff: Buffer, offset: number = 0, little: boolean = true) {
     buff = buff.slice(offset, offset + this.byteCount);
 
-    if (little) buff = buff.reverse();
+    // if (little) buff = buff.reverse();
 
-    const bigNumber = new BigNumber(buff.toString('hex'), 16);
-
-    return bigNumber.toString(10);
+    // return BigInt(bigInt(buff.toString('hex'), 16).toString());
+    return Integer.fromBuff(buff, 32, little ? 'little' : 'big', true)
   }
 
-  static write(int: string, little: boolean = true) {
-    const bigNumber = new BigNumber(int, 10);
+  static write(int: bigint, little: boolean = true) {
+    if (int > this.maxInt) throw Error('integer is too big');
 
-    let buff = Buffer.from(
-      bigNumber.toString(16).padStart(this.byteCount * 2, '0'),
-      'hex'
-    );
+    // const binthex = int.toString(16).padStart(this.byteCount * 2, '0');
+    // const buff = Buffer.from(binthex, 'hex');
 
-    if (little) buff = buff.reverse();
+    // if (little) return buff.reverse();
 
-    return buff;
+    // return buff;
+    return Integer.toBuff(int, 32, little ? 'little' : 'big', true)
   }
 }
 
@@ -118,7 +113,8 @@ export class Double {}
 
 export class Bytes {
   static encodedLength: number;
-  static read(data: Buffer) {
+  static read(data: Buffer, offset: number = 0) {
+    data = data.slice(offset);
     if (data[0] <= 253) {
       data = data.slice(1, data[0] + 1);
       this.write(data);
