@@ -1,4 +1,5 @@
 import { Int } from './Primitive';
+// @ts-ignore
 import { tlObject } from '../All';
 
 export class TLObject {
