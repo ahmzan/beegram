@@ -30,11 +30,11 @@ describe('Testing Long data type', () => {
   const bint = 12446742109551615n;
 
   it('should be return buffer in little-endian', () => {
-    expect(Primitive.Long.write(bint)).toEqual(buffNumberLE);
+    expect(Primitive.Long.write(bint, true)).toEqual(buffNumberLE);
   });
 
   it('should be return bigint from buffer little-endian', () => {
-    expect(Primitive.Long.read(buffNumberLE)).toEqual(bint);
+    expect(Primitive.Long.read(buffNumberLE, 0, true)).toEqual(bint);
   });
 
   it('should be return buffer in big-endian', () => {
@@ -57,7 +57,7 @@ describe('Testing Int128 data type', () => {
   });
 
   it('should be return number from buffer little-endian', () => {
-    expect(Primitive.Int128.read(buffNumberLE)).toEqual(bint);
+    expect(Primitive.Int128.read(buffNumberLE, 0, true)).toEqual(bint);
   });
 
   it('should be return buffer in big-endian', () => {
@@ -84,7 +84,7 @@ describe('Testing Int256 data type', () => {
   });
 
   it('should be return number from buffer little-endian', () => {
-    expect(Primitive.Int256.read(buffNumberLE)).toEqual(bint);
+    expect(Primitive.Int256.read(buffNumberLE, 0, true)).toEqual(bint);
   });
 
   it('should be return buffer in big-endian', () => {
