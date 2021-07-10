@@ -77,7 +77,7 @@ export class Integer {
       if (bint.isNegative()) bint = bint.plus(maxUint);
     }
 
-    const binthex = bint.toString(16).padStart(length * 2);
+    const binthex = bint.toString(16).padStart(length * 2, '0');
     let buff = Buffer.from(binthex, 'hex');
 
     if (order == 'little') buff = buff.reverse();
