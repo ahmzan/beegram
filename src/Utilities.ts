@@ -95,3 +95,7 @@ export class Integer {
     return rand;
   }
 }
+
+export function sha1(data: Buffer) {
+  return crypto.createHash('sha1').update(data).digest();
+}
