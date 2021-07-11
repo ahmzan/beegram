@@ -12,7 +12,9 @@ export class Int {
     return buff.readInt32BE();
   }
 
-  static write(int: number, little: boolean = true) {
+  static write(int: number | bigint, little: boolean = true) {
+    if(typeof int =='bigint') int = parseInt(int.toString())
+
     const buff = Buffer.alloc(4);
     if (int > this.maxInt) buff.writeUInt32BE(int);
     else buff.writeInt32BE(int);
@@ -169,6 +171,21 @@ export class Bytes {
   }
 }
 
-export class Str extends Bytes {}
+export class Str {
+  static encodedLength:number
+  static read(data: Buffer, offset: number = 0){
+    const str = Bytes.read(data, offset).toString('utf-8')
+    this.write(str)
+    return str
+  }
+
+  static write(str:string){
+    const buffStr = Buffer.from(str, 'utf-8')
+
+    const result =  Bytes.write(buffStr)
+    this.encodedLength = result.length
+    return result
+  }
+}
 
 export class Vector<T> {}
