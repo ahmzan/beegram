@@ -1,12 +1,9 @@
+import { Datacenter } from './Datacenter';
 import { TransportError } from '../Errors/Transport';
 import { TCPAmbridge, TCPIntermediate } from './Transport/TCP/';
 import debug from 'debug';
 
 const log = debug('Connection');
-
-function getDcAddress(dcId: number, test?: number): string {
-  return '149.154.167.40';
-}
 
 export class Connection {
   dcId: number;
@@ -20,7 +17,7 @@ export class Connection {
     this.dcId = dcId;
     this.testMode = testMode;
 
-    this.address = getDcAddress(this.dcId);
+    this.address = Datacenter(this.dcId, testMode);
     this.protocol = 'TCP';
     this.mode = 'TCPAmbridge';
     this.transport = new TCPIntermediate(this.address);
