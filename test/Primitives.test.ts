@@ -96,10 +96,70 @@ describe('Testing Int256 data type', () => {
   });
 });
 
+describe('Testing Double data type', () => {
+  const double = 1.234;
+  const doubleBuf = Buffer.from('5839b4c876bef33f', 'hex');
+
+  it('should be return buffer', () => {
+    expect(Primitive.Double.write(double)).toEqual(doubleBuf);
+  });
+
+  it('should be return double', () => {
+    expect(Primitive.Double.read(doubleBuf)).toEqual(double);
+  });
+});
+
 describe('Testing String data type', () => {
   const str = 'hello';
+
   it('should be return buffer', () => {
-    Primitive.Str.write(Buffer.from(str, 'utf-8'));
+    expect(Primitive.Str.write(str)).toBeInstanceOf(Buffer);
+  });
+});
+
+describe('Testing Bool data type', () => {
+  const buffTrue = Buffer.from('997275b5', 'hex').reverse();
+  const buffFalse = Buffer.from('bc799737', 'hex').reverse();
+
+  it('should be return buffer of true', () => {
+    expect(Primitive.Bool.write(true)).toEqual(buffTrue);
+  });
+
+  it('should be return buffer of false', () => {
+    expect(Primitive.Bool.write(false)).toEqual(buffFalse);
+  });
+
+  it('should be return true', () => {
+    expect(Primitive.Bool.read(buffTrue)).toEqual(true);
+  });
+
+  it('should be return true', () => {
+    expect(Primitive.Bool.read(buffFalse)).toEqual(false);
+  });
+});
+
+describe('Testing Vector data type', () => {
+  describe('Testing Vector<long>', () => {
+    // const arrLong = [14101943622620965665n]; unsigned
+    const arrLong = [-4344800451088585951n, -4344800451088585951n];
+    const buffLong = Buffer.from(
+      '02000000216BE86C022BB4C3216BE86C022BB4C3',
+      'hex'
+    );
+    const buffLongWithConstruct = Buffer.from(
+      '15C4B51C02000000216BE86C022BB4C3216BE86C022BB4C3',
+      'hex'
+    );
+
+    describe('Read Vector<long>', () => {
+      expect(Primitive.Vector.read(buffLong, Primitive.Long)).toEqual(arrLong);
+    });
+
+    describe('Write Vector<long>', () => {
+      expect(Primitive.Vector.write(arrLong, Primitive.Long)).toEqual(
+        buffLongWithConstruct
+      );
+    });
   });
 });
 
