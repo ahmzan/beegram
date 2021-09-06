@@ -1,13 +1,17 @@
 import * as net from 'net';
 import { getBufferFromNumber, getNumberFromBuffer } from '../../../Utilities';
 import debug from 'debug';
+import { promisify } from 'util';
 
 const log = debug('Connection:TCPAmbridge');
+const sleep = promisify(setTimeout);
 
 export class TCPAmbridge {
   address: string;
   port: number;
   socket: net.Socket;
+  handleDataFn!: (data: Buffer) => Promise<void>;
+
   constructor(address: string) {
     this.address = address;
     this.port = 80;
@@ -67,21 +71,31 @@ export class TCPAmbridge {
     });
   }
 
+  isAvailable() {
+    return this.socket.writable;
+  }
+
   async send(payload: Buffer) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       log('Sending data to %s', this.address);
       const encoded = this.encode(payload);
-      const result = this.socket.write(encoded, (err) => {
-        if (err) reject(err);
-      });
+      while (!this.isAvailable()) {
+        log('Waitign socket writable');
+        await sleep(500);
+      }
+      if (this.isAvailable()) {
+        const result = this.socket.write(encoded, (err) => {
+          if (err) reject(err);
+        });
 
-      resolve(result);
+        resolve(result);
+      }
     });
   }
 
   async receive(): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      this.socket.on('data', (data) => {
+      this.socket.once('data', (data) => {
         if (data.length != 0) {
           log('Receiving data from %s', this.address);
           const decoded = this.decode(data);
@@ -89,6 +103,18 @@ export class TCPAmbridge {
           resolve(decoded);
         }
       });
+    });
+  }
+
+  onData(fn: (data: Buffer) => Promise<void>) {
+    this.handleDataFn = fn;
+    this.socket.on('data', (data) => {
+      if (data.length != 0) {
+        log('Data received from %o', this.address);
+        const decoded = this.decode(data);
+
+        fn(decoded);
+      }
     });
   }
 }

@@ -9,6 +9,8 @@ export class TCPIntermediate {
   address: string;
   port: number;
   socket: net.Socket;
+  handleDataFn!: (data: Buffer) => Promise<void>;
+
   constructor(address: string) {
     this.address = address;
     this.port = 80;
@@ -30,11 +32,7 @@ export class TCPIntermediate {
   async connect() {
     return new Promise((resolve, reject) => {
       this.socket = net.connect(this.port, this.address, () => {
-        log(
-          'Connecting to %s:%s with TCPIntermediate',
-          this.address,
-          this.port
-        );
+        log('Connecting to %s:%s with TCPIntermediate', this.address, this.port);
       });
 
       this.socket.on('error', (err) => {
@@ -71,7 +69,7 @@ export class TCPIntermediate {
     return new Promise(async (resolve, reject) => {
       log('Sending data to %s', this.address);
       const encoded = this.encode(payload);
-      while (!this.isAvailable) {
+      while (!this.isAvailable()) {
         log('Waiting socket writable');
         await sleep(500);
       }
@@ -87,7 +85,7 @@ export class TCPIntermediate {
 
   async receive(): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      this.socket.on('data', (data) => {
+      this.socket.once('data', (data) => {
         if (data.length != 0) {
           log('Receiving data from %s', this.address);
           const decoded = this.decode(data);
@@ -95,6 +93,18 @@ export class TCPIntermediate {
           resolve(decoded);
         }
       });
+    });
+  }
+
+  onData(fn: (data: Buffer) => Promise<void>) {
+    this.handleDataFn = fn;
+    this.socket.on('data', (data) => {
+      if (data.length != 0) {
+        log('Data received from %o', this.address);
+        const decoded = this.decode(data);
+
+        fn(decoded);
+      }
     });
   }
 }
