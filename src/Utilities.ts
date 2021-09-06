@@ -44,14 +44,8 @@ export class Integer {
     let bint = bigInt(buff.toString('hex'), 16);
 
     if (signed) {
-      const maxUint = bigInt(
-        Buffer.alloc(length, 255).toString('hex'),
-        16
-      ).plus(1);
-      const maxInt = bigInt(
-        Buffer.alloc(length, 127).fill(0, 1).toString('hex'),
-        16
-      );
+      const maxUint = bigInt(Buffer.alloc(length, 255).toString('hex'), 16).plus(1);
+      const maxInt = bigInt(Buffer.alloc(length, 127).fill(0, 1).toString('hex'), 16);
       // console.log(maxUint);
       // console.log(maxInt);
       if (bint.greater(maxInt)) bint = bint.minus(maxUint);
@@ -61,19 +55,16 @@ export class Integer {
   }
 
   static toBuff(
-    int: bigint,
+    int: bigint | number,
     length: number,
     order: 'big' | 'little' = 'big',
     signed: boolean = false
   ) {
     if (!signed && int < 0n) throw new Error('cannot convert negative integer');
-    let bint = bigInt(int);
+    let bint = bigInt(int.toString());
 
     if (signed) {
-      const maxUint = bigInt(
-        Buffer.alloc(length, 255).toString('hex'),
-        16
-      ).plus(1);
+      const maxUint = bigInt(Buffer.alloc(length, 255).toString('hex'), 16).plus(1);
       if (bint.isNegative()) bint = bint.plus(maxUint);
     }
 
@@ -98,4 +89,31 @@ export class Integer {
 
 export function sha1(data: Buffer) {
   return crypto.createHash('sha1').update(data).digest();
+}
+
+export function sha256(data: Buffer) {
+  return crypto.createHash('sha256').update(data).digest();
+}
+
+// https://www.typescriptlang.org/docs/handbook/mixins.html#alternative-pattern
+export function applyMixins(derivedCtor: any, constructors: any[]) {
+  constructors.forEach((baseCtor) => {
+    Object.getOwnPropertyNames(baseCtor.prototype).forEach((name) => {
+      Object.defineProperty(
+        derivedCtor.prototype,
+        name,
+        Object.getOwnPropertyDescriptor(baseCtor.prototype, name) || Object.create(null)
+      );
+    });
+  });
+}
+
+export function xorBytes(input1: Buffer, input2: Buffer) {
+  const length = Math.max(input1.length, input2.length);
+  const result = Buffer.alloc(length);
+
+  for (var i = 0; i < length; i++) {
+    result[i] = input1[i] ^ input2[i];
+  }
+  return result;
 }
