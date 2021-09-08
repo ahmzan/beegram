@@ -1,23 +1,38 @@
-import { Int } from './Primitive';
-// @ts-ignore
-import { tlObject } from '../All';
+import { coreObject } from '../All';
+import * as Proto from '../Proto';
+import * as Schema from '../Schema';
+import debug from 'debug';
+
+const log = debug('TLObject');
 
 export class TLObject {
-  constructor() {}
-  write() {}
+  obj: { [key: number]: any };
+  data: Buffer;
+  args: any[];
 
-  static read(data: Buffer, type?: any) {
-    // slice constructor
-    const body = data.slice(4);
+  constructor(data: Buffer, offset: number = 0, ...args: any[]) {
+    this.data = data.slice(offset);
+    this.args = args;
 
-    const constructId = Int.read(data, 0, true) >>> 0
-    const tlClass = tlObject[constructId];
+    this.obj = Object.assign({}, coreObject, Schema.All, Proto.All);
+  }
 
-    try {
-      if (type) return tlClass.read(body, type);
-      return tlClass.read(body);
-    } catch (err) {
-      return 'type uknown';
-    }
+  async read() {
+    const constructId = this.data.readUInt32LE();
+    log('Contruct id %o', constructId);
+
+    const tlClass = this.obj[constructId];
+    log(tlClass);
+
+    const body = this.data.slice(4);
+    return tlClass.read(body, 0, ...this.args);
+  }
+
+  async write(): Promise<Buffer> {
+    return Promise.resolve(Buffer.alloc(0));
+  }
+
+  static read(data: Buffer, offset: number = 0, ...args: any[]): Promise<any> {
+    return new TLObject(data, offset, ...args).read();
   }
 }
