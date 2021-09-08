@@ -9,7 +9,8 @@ export {
   Int256,
   Double,
   Bytes,
-  Str,
-  Vector,
+  Bool,
+  Str
 } from './Primitive';
+export { Vector } from './Vector';
 export { TLObject } from './TLObject';
