@@ -1,44 +1,73 @@
-import { Int, Int128, Long, Str } from '../Core';
+import { Int, TLObject } from '../Core';
 
-export class Vector {
-  // private id: number;
-  // private count: number;
-  // private data: T[];
+export class Vector<T> {
+  count: number = 0;
+  data: any[] = [];
+  type!: any;
 
-  private static offset: number = 0;
-  static count: any;
-  static data: any[] = [];
+  private _id: number = 0x1cb5c415;
+  private _offset: number = 0;
+  private raw!: Buffer;
 
-  // constructor(data: T[]) {
-  //   this.id = 0x1cb5c415;
-
-  //   this.count = data.length;
-  //   this.data = data;
-  // }
-
-  // write() {
-  //   return Buffer.concat([
-  //     Int.write(this.id, true),
-  //     Int128.write(this.nonce, false)
-  //   ]);
-  // }
-
-  static read(data: Buffer, type: any) {
-    this.count = this._read(Int, data, true);
-    for (var i = 0; i < this.count; i++) {
-      this.data.push(this._read(type, data, true));
+  constructor(data: T extends Buffer ? Buffer : T[], offset: number = 0, type?: any) {
+    if (data instanceof Buffer) {
+      this.raw = data.slice(offset);
+      this.type = type;
+    } else {
+      this.count = data.length;
+      this.data = data;
+      this.type = type;
     }
+  }
 
+  async read(): Promise<any[]> {
+    const tempRaw = this.raw;
+    if (tempRaw.readUInt32LE() == this._id) this.raw = this.raw.slice(4); // check if come with construct
+    this.count = await this._read(Int, this.raw);
+    for (var i = 0; i < this.count; i++) {
+      try {
+        let result: any;
+        if (this.type) {
+          result = await this._read(this.type, this.raw);
+        } else {
+          result = await TLObject.read(this.raw, this._offset);
+          this._offset += (await result.write()).length;
+        }
+        this.data.push(result);
+      } catch (err) {
+        this.data.push(err);
+      }
+    }
     return this.data;
   }
 
-  private static _read(dataType: any, value: any, little: boolean = false) {
-    const result = dataType.read(value, this.offset, little);
-    this.offset += dataType.byteCount || dataType.encodedLength;
+  async write(): Promise<Buffer> {
+    const bufData = await Promise.all(
+      this.data.map(async (d) => {
+        // for buffer
+        if (Buffer.isBuffer(d)) return d;
+        // for object
+        if (this.type) return this.type.write(d);
+        // for class
+        return await d.write();
+      })
+    );
+
+    return Buffer.concat([Int.write(this._id, true), Int.write(this.count, true), ...bufData]);
+  }
+
+  private async _read(dataType: any, value: Buffer) {
+    const result = await dataType.read(value, this._offset);
+    const reslen = (await dataType.write(result)).length;
+    this._offset += dataType.byteCount || reslen;
     return result;
   }
-}
 
-// console.log(new Vector<Int>([Int.write(123)]).write());
-// const raw = '01000000216BE86C022BB4C3';
-// console.log(Vector.read(Buffer.from(raw, 'hex'), Long));
+  static read(data: Buffer, offset: number = 0, type?: any) {
+    return new Vector<Buffer>(data, offset, type).read();
+  }
+
+  static write(arrData: any[], type?: any): Promise<Buffer> {
+    return new Vector(arrData, 0, type).write();
+  }
+}
