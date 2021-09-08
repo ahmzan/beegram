@@ -2,3 +2,7 @@ package-lock.json
 .vscode
 dist
 node_modules
+
+# TL Files
+src/TL/Schema.ts
+src/TL/Proto.ts
