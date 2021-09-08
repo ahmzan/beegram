@@ -29,7 +29,7 @@ export class SQLiteStorage extends SessionStorage {
   }
 
   open() {
-    if (!this.db?.open) this.db = BetterSqlite3(this.name, { verbose: log });
+    if (!this.db?.open) this.db = BetterSqlite3(this.name, { verbose: log }).defaultSafeIntegers();
     this.create();
   }
 
@@ -127,18 +127,21 @@ export class SQLiteStorage extends SessionStorage {
 
   getPeerById(id: number): InputPeer {
     const peerData = this.db.prepare(`SELECT * FROM peers WHERE peer_id = ${id}`).get();
+    if (peerData == undefined) throw Error('peer not found');
 
     return getInputPeer(peerData);
   }
 
   getPeerByPhoneNumber(phone: number): InputPeer {
     const peerData = this.db.prepare(`SELECT * FROM peers WHERE phone_number = ${phone}`).get();
+    if (peerData == undefined) throw Error('peer not found');
 
     return getInputPeer(peerData);
   }
 
   getPeerByUsername(username: string): InputPeer {
     const peerData = this.db.prepare('SELECT * FROM peers WHERE username = ?').get(username);
+    if (peerData == undefined) throw Error('peer not found');
 
     return getInputPeer(peerData);
   }

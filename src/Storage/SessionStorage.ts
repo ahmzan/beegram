@@ -101,17 +101,17 @@ export abstract class SessionStorage {
 }
 
 export interface PeerData {
-  peer_id: number | bigint;
-  access_hash: bigint;
+  peer_id: number;
   type: string;
+  access_hash: bigint;
   username?: string;
-  phone_number?: number;
+  phone_number?: string;
 }
 
 /**
  * Get input peer
  **/
-export function getInputPeer(peer: any): InputPeer {
+export function getInputPeer(peer: PeerData): InputPeer {
   if (peer.type == 'user' || peer.type == 'bot')
     return new inputPeerUser({
       user_id: peer.peer_id,
