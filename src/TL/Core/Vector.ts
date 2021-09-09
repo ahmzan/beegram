@@ -1,6 +1,6 @@
 import { Int, TLObject } from '../Core';
 
-export class Vector<T> {
+export class Vector {
   count: number = 0;
   data: any[] = [];
   type!: any;
@@ -9,7 +9,7 @@ export class Vector<T> {
   private _offset: number = 0;
   private raw!: Buffer;
 
-  constructor(data: T extends Buffer ? Buffer : T[], offset: number = 0, type?: any) {
+  constructor(data: Buffer | any[], offset: number = 0, type?: any) {
     if (data instanceof Buffer) {
       this.raw = data.slice(offset);
       this.type = type;
@@ -64,7 +64,7 @@ export class Vector<T> {
   }
 
   static read(data: Buffer, offset: number = 0, type?: any) {
-    return new Vector<Buffer>(data, offset, type).read();
+    return new Vector(data, offset, type).read();
   }
 
   static write(arrData: any[], type?: any): Promise<Buffer> {
