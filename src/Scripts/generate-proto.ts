@@ -25,7 +25,7 @@ import { Integer } from '../Utilities';
 const classToLines = (item: Item, withNamespace: boolean = false) => {
   let [nameSpace, className] = (item.method || item.predicate || '').split('.');
   // if (className == undefined) className = nameSpace;
-  return `export class ${className ? className : nameSpace}<T = unknown> {
+  return `export class ${className ? className : nameSpace}<T extends Buffer | unknown = unknown> {
 ${paramsToProp(item)}
 
   private _id: number = 0x${Integer.toBuff(BigInt(item.id), 4, 'big', true).toString('hex')};
