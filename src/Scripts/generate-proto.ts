@@ -188,7 +188,7 @@ const paramsToWriteLines = (item: Item) => {
   // if (params.find((param) => param.name == 'flags')) writeLines += '      Int.write(this.flags);\n';
   // params = params.filter((param) => param.name != 'flags');
   writeLines = params
-    .filter((param) => !/flags/.test(param.type))
+    .filter((param) => !/true/.test(param.type))
     .map((param) => {
       if (param.type.match('flags')) {
         const type = param.type.replace(/flags\.[0-9]+\?/, '');
@@ -204,8 +204,6 @@ const paramsToWriteLines = (item: Item) => {
               : '';
           return `      this.${param.name} != undefined ? await Vector.write(this.${param.name}${primitive}) : Buffer.alloc(0)`;
         }
-        if (type == 'true')
-          return `      this.${param.name} !=  undefined ? Int.write(0x3fedd339, true) : Buffer.alloc(0)`;
         return `      this.${param.name} != undefined ? await this.${param.name}.write(): Buffer.alloc(0)`;
       }
       if (/Vector/.test(param.type)) {
