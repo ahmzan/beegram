@@ -115,6 +115,10 @@ export function sha256(data: Buffer) {
   return crypto.createHash('sha256').update(data).digest();
 }
 
+export function md5(data: Buffer) {
+  return crypto.createHash('md5').update(data).digest();
+}
+
 // https://www.typescriptlang.org/docs/handbook/mixins.html#alternative-pattern
 export function applyMixins(derivedCtor: any, constructors: any[]) {
   constructors.forEach((baseCtor) => {
