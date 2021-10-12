@@ -126,7 +126,7 @@ export class Bytes {
     if (data.length <= 253) {
       const byteLength = getBufferFromNumber(data.length, 1);
 
-      let paddingCount = 4 - (1 + (data.length % 4));
+      const paddingCount = 4 - ((1 + data.length) % 4) == 4 ? 0 : 4 - ((1 + data.length) % 4);
 
       const result = Buffer.concat([byteLength, data, Buffer.alloc(paddingCount)]);
       this.encodedLength = result.length;
@@ -134,7 +134,7 @@ export class Bytes {
     }
 
     const byteLength = getBufferFromNumber(data.length, 3, true);
-    const paddingCount = data.length % 4;
+    const paddingCount = 4 - ((4 + data.length) % 4) == 4 ? 0 : 4 - ((4 + data.length) % 4);
 
     const result = Buffer.concat([
       Buffer.from('fe', 'hex'),
