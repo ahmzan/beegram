@@ -1,3 +1,4 @@
+import { PeerInvalid } from '../Errors/PeerError';
 import { getInputPeer, PeerData, SessionStorage } from './SessionStorage';
 import { InputPeer } from '../TL/Schema';
 import { unlinkSync } from 'fs';
@@ -127,21 +128,21 @@ export class SQLiteStorage extends SessionStorage {
 
   getPeerById(id: number): InputPeer {
     const peerData = this.db.prepare(`SELECT * FROM peers WHERE peer_id = ${id}`).get();
-    if (peerData == undefined) throw Error('peer not found');
+    if (peerData == undefined) throw new PeerInvalid('peer id not found');
 
     return getInputPeer(peerData);
   }
 
   getPeerByPhoneNumber(phone: number): InputPeer {
     const peerData = this.db.prepare(`SELECT * FROM peers WHERE phone_number = ${phone}`).get();
-    if (peerData == undefined) throw Error('peer not found');
+    if (peerData == undefined) throw new PeerInvalid('peer phone not found');
 
     return getInputPeer(peerData);
   }
 
   getPeerByUsername(username: string): InputPeer {
     const peerData = this.db.prepare('SELECT * FROM peers WHERE username = ?').get(username);
-    if (peerData == undefined) throw Error('peer not found');
+    if (peerData == undefined) throw new PeerInvalid('peer username not found');
 
     return getInputPeer(peerData);
   }

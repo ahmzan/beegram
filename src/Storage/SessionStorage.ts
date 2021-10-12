@@ -1,3 +1,4 @@
+import { PeerInvalid } from '../Errors/PeerError';
 import { inputPeerChannel, inputPeerChat, inputPeerUser, InputPeer } from '../TL/Schema';
 
 export abstract class SessionStorage {
@@ -126,5 +127,5 @@ export function getInputPeer(peer: PeerData): InputPeer {
 
   if (peer.type == 'group') return new inputPeerChat({ chat_id: peer.peer_id });
 
-  throw Error('Invalid peer');
+  throw new PeerInvalid('Invalid peer');
 }
