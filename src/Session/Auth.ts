@@ -48,19 +48,26 @@ export class Auth {
 
   getMsgId(): bigint {
     log('Geting msg_id');
-    const time = BigInt(Math.floor(Date.now() / 1000)) * 2n ** 32n;
-    const timeBuf = Buffer.from(time.toString(16), 'hex').slice(0, 4);
-    log('Time %o %o', time, timeBuf);
-    const id = Integer.random(4);
-    const idBuf = Integer.toBuff(id, 4, 'big');
-    log('Id %o %o', id, idBuf);
-    const msgId = Integer.fromBuff(Buffer.concat([timeBuf, idBuf]), 8, 'big');
-    log('MsgId %o', msgId);
-    if (msgId % 4n != 0n) {
-      return this.getMsgId();
+    const time = Date.now();
+    const timeSec = Math.floor(time / 1000);
+    const timeMSec = time % 1000;
+    const random = Math.floor(Math.random() * 0xffff);
+
+    let msgId = bigInt(timeSec)
+      .shiftLeft(32)
+      .add(
+        bigInt(timeMSec)
+          .shiftLeft(21)
+          .or(random << 3)
+          .or(4)
+      );
+
+    if (msgId.lt(this.lastMsgId)) {
+      msgId = msgId.plus(4);
     }
-    this.lastMsgId = msgId;
-    return msgId;
+    this.lastMsgId = BigInt(msgId.toString());
+    log('Msg_id %o', this.lastMsgId);
+    return this.lastMsgId;
   }
 
   async pack(data: Buffer) {
@@ -236,7 +243,7 @@ export class Auth {
           serverDHInnerData.dh_prime.length
         );
         const dh_prime = Integer.fromBuff(serverDHInnerData.dh_prime, 256, 'big');
-        log('Delta time %s', serverDHInnerData.server_time - Math.floor(Date.now() / 1000));
+        log('Delta server time %o', Math.floor(Date.now() / 1000) - serverDHInnerData.server_time);
 
         // 6
         // https://core.telegram.org/mtproto/samples-auth_key#6-random-number-b-is-computed
@@ -291,6 +298,7 @@ export class Auth {
 
         return auth_key;
       } catch (err) {
+        console.log(err);
         log('Getting auth_key retry %o ...', this.retries);
         this.retries -= 1;
         if (this.retries == 0) {
