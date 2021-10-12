@@ -26,10 +26,11 @@ const classToLines = (item: Item, withNamespace: boolean = false) => {
   let [nameSpace, className] = (item.method || item.predicate || '').split('.');
   // if (className == undefined) className = nameSpace;
   return `export class ${className ? className : nameSpace}<T extends Buffer | unknown = unknown> {
+  _: '${className ? className : nameSpace}' = '${className ? className : nameSpace}';
 ${paramsToProp(item)}
 
   private _id: number = 0x${Integer.toBuff(BigInt(item.id), 4, 'big', true).toString('hex')};
-  private _offset: number = 0;
+  private _offset!: number;
   private raw!: Buffer;
 
   constructor(${paramsToLineConstructor(item)}) {
@@ -120,7 +121,7 @@ const paramsToReadLines = (item: Item) => {
   let [nameSpace, className] = (item.method || item.predicate || '').split('.');
   let params = item.params;
   if (params.length == 0) return `    return new ${className ? className : nameSpace}();`;
-  let readLines = '';
+  let readLines = '    this._offset = 0;\n';
   // flags
   // if (params.find((param) => param.name == 'flags'))
   //   readLines += '    this.flags = this._read(Int, this.raw);\n';
@@ -145,7 +146,7 @@ const paramsToReadLines = (item: Item) => {
           return `    this.${param.name} = this.flags & ( 1 << ${flagNumber}) ? await Vector.read(this.raw, this._offset${primitive}) : undefined;\n    this._offset += this.${param.name} != undefined ? (await Vector.write(this.${param.name}${primitive})).length : 0\n`;
         }
         if (type == 'true')
-          return `    this.${param.name} = this.flags & (1 << ${flagNumber}) ? true : undefined;`;
+          return `    this.${param.name} = this.flags & (1 << ${flagNumber}) ? true : false;`;
         return `    this.${param.name} = this.flags & (1 << ${flagNumber}) ? await TLObject.read(this.raw, this._offset) : undefined;\n    this._offset += this.${param.name} != undefined ? (await this.${param.name}.write()).length : 0;\n`;
       }
       if (/Vector/.test(param.type)) {
@@ -251,6 +252,7 @@ const availableDatatype: { [key: string]: string } = {
   bytes: 'Buffer',
   double: 'number',
   Bool: 'boolean',
+  true: 'boolean',
   '!X': 'any'
 };
 
