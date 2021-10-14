@@ -22,7 +22,6 @@ import { APP_VERSION, DEVICE_MODEL, LANG, NOTICE, SYSTEM_VERSION } from './Const
 import { getSSR } from './Crypto/SSR';
 import { Dispatcher } from './Dispatcher';
 import { RPCError } from './Errors/RPCError';
-import { Methods } from './Methods';
 import { Auth, Session } from './Session';
 import { SessionStorage, SQLiteStorage } from './Storage';
 import {
@@ -51,7 +50,7 @@ import {
   users
 } from './TL/Schema';
 import { Middleware, UpdateEventMap } from './Types';
-import { applyMixins, Integer, md5 } from './Utilities';
+import { Integer, md5 } from './Utilities';
 import { createInterface } from 'readline';
 import { promisify } from 'util';
 import { Messages } from './Methods/Messages';
@@ -623,9 +622,6 @@ export class Client {
     this.dispatcher.removeListener(eventName, fn);
   }
 }
-
-export interface Client extends Methods {}
-applyMixins(Client, [Methods]);
 
 interface ClientOptions {
   botToken?: string;

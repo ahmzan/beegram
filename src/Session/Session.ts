@@ -406,6 +406,11 @@ export class Session {
       } else {
         log('Server sends a message');
         debug('message %o', msg.body);
+        if (msg.body instanceof proto.gzip_packed) {
+          log('Unpack packet');
+          msg.body = await TLObject.read(zlib.gunzipSync(msg.body.packed_data));
+          debug('message %o', msg.body);
+        }
         this.client.dispatcher.handleUpdate(msg.body);
       }
     }
