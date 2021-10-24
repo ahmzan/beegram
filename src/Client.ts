@@ -613,13 +613,21 @@ export class Client {
   }
 
   /** register function for handle event update */
-  on<K extends keyof UpdateEventMap>(eventName: K, fn: Middleware<UpdateEventMap[K]>) {
-    this.dispatcher.addListener(eventName, fn);
+  on<K extends keyof UpdateEventMap>(eventName: K | K[], fn: Middleware<UpdateEventMap[K]>) {
+    if (!Array.isArray(eventName)) eventName = [eventName];
+
+    eventName.forEach((name) => {
+      this.dispatcher.addListener(name, fn);
+    });
   }
 
   /** unregister function from handle event update */
-  off<K extends keyof UpdateEventMap>(eventName: K, fn: Middleware<UpdateEventMap[K]>) {
-    this.dispatcher.removeListener(eventName, fn);
+  off<K extends keyof UpdateEventMap>(eventName: K | K[], fn: Middleware<UpdateEventMap[K]>) {
+    if (!Array.isArray(eventName)) eventName = [eventName];
+
+    eventName.forEach((name) => {
+      this.dispatcher.removeListener(name, fn);
+    });
   }
 }
 
