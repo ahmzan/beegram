@@ -70,7 +70,7 @@ const input = (text: string) => {
   return new Promise<string>((resolve, reject) => {
     inputInterface.once('SIGINT', () => {
       inputInterface.close();
-      resolve('');
+      reject(new Error('Aborted'));
     });
 
     inputInterface.question(text, (answer) => {
@@ -80,8 +80,6 @@ const input = (text: string) => {
   });
 };
 const sleep = promisify(setTimeout);
-
-// @TODO: Fix input readline
 
 export class Client {
   sessionName: string;
@@ -183,6 +181,7 @@ export class Client {
     try {
       await this.connect();
       const isAuthorize = this.storage.userId() == 0 ? false : true;
+      log('Is authorize %o', isAuthorize);
 
       if (!isAuthorize) {
         if (this.isBot) {
@@ -206,7 +205,18 @@ export class Client {
       this.initialize();
       log('Client started');
       return this.user;
-    } catch (err) {
+    } catch (err: any) {
+      if (err instanceof RPCError) {
+        if (err.message == 'AUTH_KEY_UNREGISTERED') {
+          log('Getting new auth key');
+          await this.disconnect();
+
+          const newAuthKey = await new Auth(this.dcId, this.testMode).create();
+          this.storage.authKey(newAuthKey);
+          this.storage.userId(0);
+          return this.start();
+        }
+      }
       await this.disconnect();
       throw err;
     }
@@ -222,6 +232,10 @@ export class Client {
 
   /** connect to server */
   async connect() {
+    if (this.isConnected) {
+      log('Client already connected');
+      return;
+    }
     log('Connecting');
     await this.checkSession();
 
@@ -313,7 +327,6 @@ export class Client {
       let phoneCodeHash;
       while (true) {
         const inputPhone = await input('Phone number : ');
-        if (inputPhone == 'cancel') throw new Error('Login canceled');
         this.phoneNumber = inputPhone.replace(/[+ ]/g, '');
 
         try {
@@ -343,7 +356,6 @@ export class Client {
       let authorization;
       while (true) {
         const phoneCode = await input('Code : ');
-        if (phoneCode == 'cancel') throw new Error('Login canceled');
         this.phoneCode = phoneCode.replace(/[a-zA-Z]+/g, '');
 
         try {
@@ -391,7 +403,7 @@ export class Client {
       }
 
       return authorization.user;
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof RPCError) {
         if (err.message == 'SESSION_PASSWORD_NEEDED') {
           return await this.authorizeWithPassword();
@@ -414,8 +426,9 @@ export class Client {
       }
       log('Authorize failed');
       debug('error %o', err);
-      await this.disconnect();
       throw err;
+    } finally {
+      await this.disconnect();
     }
   }
 
