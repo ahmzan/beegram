@@ -4,7 +4,8 @@
   "description": "MTProto API Client Framework",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npm run clean && npm run generate && tsc",
+    "build": "tsc",
+    "build:all": "npm run clean && npm run generate && npm run build",
     "clean": "rm -rf ./dist && rm -f ./src/TL/Schema.ts ./src/TL/Proto.ts",
     "generate": "ts-node ./src/Scripts/generate-proto.ts && ts-node ./src/Scripts/generate-schema.ts",
     "test": "jest"
