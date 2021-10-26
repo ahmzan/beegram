@@ -27,10 +27,14 @@ const log = debug('Connection:TCPAmbridge');
 const sleep = promisify(setTimeout);
 
 export class TCPAmbridge {
-  address: string;
-  port: number;
-  socket: net.Socket;
-  handleDataFn!: (data: Buffer) => Promise<void>;
+  private address: string;
+  private port: number;
+  private socket: net.Socket;
+  private handleDataFn!: (data: Buffer) => Promise<void>;
+  private chunks: Array<Buffer> = [];
+  private totChunkSize: number = 0;
+  private curChunkSize: number = 0;
+  private waitAnotherChunk: boolean = false;
 
   constructor(address: string) {
     this.address = address;
@@ -38,7 +42,7 @@ export class TCPAmbridge {
     this.socket = new net.Socket();
   }
 
-  encode(payload: Buffer) {
+  private encode(payload: Buffer) {
     const length = payload.byteLength / 4;
     if (length >= 127) {
       return Buffer.concat([
@@ -50,7 +54,7 @@ export class TCPAmbridge {
     return Buffer.concat([Buffer.alloc(1, length), payload]);
   }
 
-  decode(data: Buffer) {
+  private decode(data: Buffer) {
     if (data[0] == 0x7f) {
       const length = getNumberFromBuffer(data.slice(1, 3), true) * 4;
       return data.slice(4, length + 4);
@@ -75,8 +79,6 @@ export class TCPAmbridge {
         this.socket.write(Buffer.from('ef', 'hex'));
         resolve(true);
       });
-
-      // this.socket.on('data', (da) => console.log(da));
     });
   }
 
@@ -91,7 +93,7 @@ export class TCPAmbridge {
     });
   }
 
-  isAvailable() {
+  private isAvailable() {
     return this.socket.writable;
   }
 
@@ -128,12 +130,26 @@ export class TCPAmbridge {
 
   onData(fn: (data: Buffer) => Promise<void>) {
     this.handleDataFn = fn;
-    this.socket.on('data', (data) => {
-      if (data.length != 0) {
-        log('Data received from %o', this.address);
-        const decoded = this.decode(data);
 
-        fn(decoded);
+    this.socket.on('data', (chunk) => {
+      log('Chunk received from %o', this.address);
+      if (chunk.length == 0) return;
+
+      this.totChunkSize = chunk.readUInt32LE();
+      this.curChunkSize += this.waitAnotherChunk ? chunk.length : chunk.length - 4;
+
+      if (this.curChunkSize < this.totChunkSize) {
+        log('Wait another chunk');
+        this.waitAnotherChunk = true;
+        this.chunks.push(chunk);
+      } else {
+        log('Chunk completed');
+        this.waitAnotherChunk = false;
+        this.chunks.push(chunk);
+        const decoded = this.decode(Buffer.concat(this.chunks));
+        this.chunks = [];
+        this.curChunkSize = 0;
+        this.handleDataFn(decoded);
       }
     });
   }
