@@ -113,7 +113,7 @@ export class SQLiteStorage extends SessionStorage {
     throw Error('testmode empty');
   }
 
-  userId(userId?: number): number {
+  userId(userId?: bigint): bigint {
     if (userId != undefined) {
       const rst = this.db.prepare("SELECT value FROM session WHERE id = 'user_id'").get();
       if (!rst)
@@ -122,11 +122,11 @@ export class SQLiteStorage extends SessionStorage {
     }
 
     const rst = this.db.prepare("SELECT value FROM session WHERE id = 'user_id'").get()?.value;
-    if (rst) return parseInt(rst);
-    return 0;
+    if (rst) return BigInt(rst);
+    return 0n;
   }
 
-  getPeerById(id: number): InputPeer {
+  getPeerById(id: bigint): InputPeer {
     const peerData = this.db.prepare(`SELECT * FROM peers WHERE peer_id = ${id}`).get();
     if (peerData == undefined) throw new PeerInvalid('peer id not found');
 

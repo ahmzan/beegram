@@ -107,9 +107,9 @@ export class Context<U extends UpdateEvent> {
           : this.update.message.peer_id._ == 'peerChat'
           ? this.update.message.peer_id.chat_id
           : this.update.message.peer_id.channel_id
-        : 0;
+        : 0n;
     if (this.update instanceof schema.updateShortMessage) return this.update.user_id;
-    return 0;
+    return 0n;
   }
 
   get fromId() {

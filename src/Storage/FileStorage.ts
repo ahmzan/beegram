@@ -127,18 +127,18 @@ export class FileStorage extends SessionStorage {
    * Get and Save userid
    * @return return a number
    **/
-  userId(userId?: number): number {
+  userId(userId?: bigint): bigint {
     if (userId != undefined) {
       fs.writeFileSync(this.path + 'dcid', userId.toString());
     }
 
-    return parseInt(fs.readFileSync(this.path + 'dcid', 'utf-8'));
+    return BigInt(fs.readFileSync(this.path + 'dcid', 'utf-8'));
   }
 
   /**
    * Get peer data by id
    **/
-  getPeerById(id: number): InputPeer {
+  getPeerById(id: bigint): InputPeer {
     const peerData = this.db.prepare(`SELECT * FROM peers WHERE peer_id = ${id}`).get();
 
     return getInputPeer(peerData);

@@ -66,12 +66,12 @@ export abstract class SessionStorage {
    * Get and Save userid
    * @return return a number
    **/
-  abstract userId(userId?: number): number;
+  abstract userId(userId?: bigint): bigint;
 
   /**
    * Get peer data by id
    **/
-  abstract getPeerById(id: number | bigint): any;
+  abstract getPeerById(id: bigint): any;
 
   /**
    * Get peer data by phone number with international format (e.g 1234, 628111)
@@ -102,7 +102,7 @@ export abstract class SessionStorage {
 }
 
 export interface PeerData {
-  peer_id: number;
+  peer_id: bigint;
   type: string;
   access_hash: bigint;
   username?: string;
